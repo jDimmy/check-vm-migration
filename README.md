@@ -13,9 +13,9 @@ For this project we used the PostgreSQL application that provides tests. To do t
 
 - In case of success of the tests we must have at the end of the execution this :
 
-=======================
-All 193 tests passed.
-=======================
+    =======================
+    All 193 tests passed.
+    =======================
 
 # scenario
  - The cpuid file (cpuid.c++), allows us to discover the features of the virtual machine.
