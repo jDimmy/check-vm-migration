@@ -16,6 +16,13 @@ For this project we used the PostgreSQL application that provides tests. To do t
                     =======================
                     All 193 tests passed.
                     =======================
+ 
+ - In the python folder, the script first.py must be launched in dom0. 
+It contains the main program for automating the determination of the list of features necessary for the proper functioning of the application on the vm.
+
+ - These features are contained in the file ./python/feautures.txt. 
+    At the beginning, this file contains the list of all the features to be tested, these will be eliminated progressively until the necessary minimum of features is obtained.    
+
 
 # scenario
  - The cpuid file (cpuid.c++), allows us to discover the features of the virtual machine.
@@ -32,4 +39,6 @@ Once obtained, we delete the disabled features because they cannot be modified.
         |
         |__(#2) Other features may be unnecessary for the virtual machine 
             startup, but rather necessary for the application operation: these are the important features.
-
+        |
+        |__(#3) We also notice that when we disable some features, others are automatically set to 0 (disabled).
+            This is how we were able to establish the dependencies between the features. 
