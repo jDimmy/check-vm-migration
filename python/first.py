@@ -91,6 +91,14 @@ def remove_tested_feature(feature_file : str, feature : str) :
 
 
 
+def necessary_features(nes_feature_file : str, feature : str) :
+    f = open(nes_feature_file, 'a')
+    f.write(feature)
+    f.close() 
+        
+
+
+
 def check_success(res_file : str) -> bool:
 
     with open(res_file, 'r') as f: 
@@ -100,7 +108,9 @@ def check_success(res_file : str) -> bool:
 
 def check_launch(launch_log : str) -> bool:
     with open(launch_log, 'r') as f:
-        return f.readlines()[-1] == 'Ubuntu 18.04 LTS myvm hvc0\n' or f.readlines()[-1] == 'Ubuntu 18.04 LTS myvm hvc0'
+        x = f.readlines()
+        
+    return x[-1] == 'Ubuntu 18.04 LTS myvm hvc0\n' or x[-1] == 'Ubuntu 18.04 LTS myvm hvc0'
 
 
 
@@ -109,7 +119,8 @@ if __name__ == "__main__" :
 
     import os
 
-    file = open("../cpuid_bits.txt", "r")
+    # initial cpuid features
+    file = open("/etc/xen/cpuid_bits.txt", "r")
     file.readline()
     ECX = file.readline()
     EDX = file.readline()
@@ -198,45 +209,90 @@ if __name__ == "__main__" :
         ecx_feats[j] = ECX[i]
         i += 1
 
-
-    file = open("../test_cpuid_bits.txt", "r")
-    file.readline()
-    ecx = file.readline()
-    edx = file.readline()
-    file.close()      
-
-
-
-    # zero features
-    dep_feats = {}
-    zero_features(dep_feats, ecx_feats)
-    zero_features(dep_feats, edx_feats)
-
-    for feat in dep_feats["zero_features"] :
-        remove_tested_feature("features.txt", feat)
+    
+    with open("/etc/xen/features.txt", 'r') as file_f:  
+        while len(file_f.readlines()) != 0 :
+            # current cpuid features
+            file = open("/etc/xen/test_cpuid_bits.txt", "r")
+            file.readline()
+            ecx = file.readline()
+            edx = file.readline()
+            file.close()      
 
 
 
-    with open("features.txt") as f:
-        content = f.read()
-        f.seek(0) 
-        content = content.split()
-        
+            # zero features
+            dep_feats = {}
+            zero_features(dep_feats, ecx_feats)
+            zero_features(dep_feats, edx_feats)
+
+            for feat in dep_feats["zero_features"] :
+                remove_tested_feature("/etc/xen/features.txt", feat)
 
 
-        test = check_success("../check_result.txt")
-        cpuid = get_cpuid_param("/etc/xen/myvm.cfg")
-        features_test("/etc/xen/myvm.cfg", cpuid, content[0], test)
+            # features to be tested
+            with open("/etc/xen/features.txt", "r+") as f:
+                features = f.read()
+                f.seek(0) 
+                features = features.split()
+                
 
-        os.system("xl create -c myvm.cfg > /etc/xen/vm_launcher_log.txt")
-        launched = check_launch("/etc/xen/myvm.cfg")
-         
-        if not launched:
-            remove_tested_feature("feature.txt", content[0])
+            test = check_success("/etc/xen/check_result.txt")
 
-        os.system("scp ./script/test-run.sh popo@ip:~")
-        os.system("ssh popo@ip")
-        os.system("chmod +x ./test-run.sh && bash ./test-run.sh")
+            # update the cpuid parameter in the VM config file
+            cpuid = get_cpuid_param("/etc/xen/myvm.cfg")
+            features_test("/etc/xen/myvm.cfg", cpuid, features[0]+"=0", test)
+
+
+            # launch the VM with the updated cpuid parameter
+            os.system("xl create -c myvm.cfg > /etc/xen/vm_launcher_log.txt")
+
+            # check if the VM launching has worked
+            launched = check_launch("/etc/xen/vm_launcher_log.txt")
+
+            # if it doesn't,  
+            if not launched:
+                remove_tested_feature("/etc/xen/feature.txt", features[0])
+            
+            
+            else:
+                # update the user name and the ip address
+                user = ""
+                ip = ""
+                os.system("scp ./script/test-run.sh "+user+"@"+ip+":~") 
+                os.system("scp ./script/cpuid "+user+"@"+ip+":~") 
+                os.system("ssh "+user+"@"+ip)
+                os.system("chmod +x ./test-run.sh && bash test-run.sh")
+
+                # check if the test suites has worked
+                test = check_success("/etc/xen/check_result.txt")
+
+                if test:
+                    remove_tested_feature("/etc/xen/feature.txt", features[0])
+                else:
+                    necessary_features("/etc/xen/necessary_feature.txt", features[0])
+                    remove_tested_feature("/etc/xen/feature.txt", features[0])    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         #os.system("chmod +x ./script/test-run.sh && bash ./script/test-run.sh")
         #os.system("shutdown -h now")

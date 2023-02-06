@@ -1,5 +1,9 @@
-fpu       
-vme      
+
+fpu
+
+
+
+      
 de      
 pse      
 tsc      
@@ -8,16 +12,16 @@ pae
 mce      
 cmpxchg8      
 apic      
-sysenter      
+      
 mtrr      
-pge      
+      
 mca      
 cmov      
 pat      
 pse36      
 psn      
 clfsh      
-ds      
+      
 acpi      
 mmx      
 fxsr      
@@ -33,7 +37,7 @@ sse3
 pclmulqdq      
 dtes64      
 monitor      
-dscpl      
+cpl      
 vmx      
 smx      
 est      
@@ -60,4 +64,3 @@ avx
 f16c      
 rdrand      
 hypervisor      
-
